@@ -5,10 +5,31 @@ var http       = require('http'),
     url        = require('url'),
     fs         = require('fs'),
     mime       = require('mime-types'),
+    nodemailer = require("nodemailer"),
     sqlite3    = require('sqlite3'),
-    email      = require('emailjs'),
     exec       = require('child_process').exec,
     extend     = require('extend');
+// -------------------------------------------------------------------
+const nodemailer = require("nodemailer");
+const createTransporter = async () => {
+  let transporter = nodemailer.createTransport({
+    host: process.env.SMTP,
+    port: 465,
+    secure: true, // true for 465, false for other ports
+    tls: {rejectUnauthorized: false},
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PSWD
+    },
+  });
+
+  return transporter;
+};
+// ---------------------------------------------------------
+const sendEmail = async (emailOptions) => {
+  let emailTransporter = await createTransporter();
+  await emailTransporter.sendMail(emailOptions);
+};
 // -------------------------------------------------------------------
 var LOG            = false,
     PORT           = 9000,
@@ -619,6 +640,18 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
 }
 // -------------------------------------------------------------------
 function Eml(oUrl, oPar, oRes, oReq, sBody){
+    sendEmail({
+      subject: oPar.oFields.subject,
+      text:    oPar.oFields.text,
+      to:      oPar.oFields.to,
+      cc:      oPar.oFields.cc,
+      from:    process.env.SMTP_EMAIL,
+      attachments: oPar.oFields.attachmnet == undefined ? [] : [{
+        content: oPar.oFields.attachmnet,
+      }],
+    });
+    oRes.end(JSON.stringify({state:"OK"}));
+/*    
   //console.log("eml", oPar);
   oRes.writeHead(200, {
     "Content-Type": "application/json; charset=utf-8",
@@ -626,12 +659,7 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
     "Pragma": "no-cache",
     "Expires": "0"
   });
-  var server  = email.server.connect({
-      user:    "michael.krocka@gmail.com",
-      password:"MiKroITSD!",
-      host:    "smtp.gmail.com",
-      ssl:     true
-  });
+
   var oSend = {
     text:    oPar.oFields.text,
     from:    "Michael Krocka<michael.krocka@gmail.com>",
@@ -653,6 +681,7 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
     else
       oRes.end(JSON.stringify({state:err.message}));
   });
+*/
 }
 // -------------------------------------------------------------------
 function stringComparison(a, b) {
