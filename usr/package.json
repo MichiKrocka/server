@@ -1,0 +1,21 @@
+{
+  "name": "usr",
+  "version": "1.0.0",
+  "description": "help apps",
+  "main": "rechnung.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MK",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "emailjs": "^3.4.0",
+    "googleapis": "^104.0.0",
+    "html-pdf": "^3.0.1",
+    "nodemailer": "^6.7.6",
+    "readline": "^1.3.0",
+    "sprintf-js": "^1.1.2",
+    "sqlite3": "^5.0.0"
+  }
+}

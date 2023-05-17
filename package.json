@@ -1,0 +1,36 @@
+{
+  "name": "ms-lift-db",
+  "version": "1.0.0",
+  "description": "krocka.goip.de",
+  "main": "sqlite.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node sqlite",
+    "devstart": "nodemon sqlite"
+  },
+  "nodemonConfig": {
+    "ext": "js,htm,json,ejs",
+    "delay": "1",
+    "ignore": [
+      "data/",
+      "net/",
+      "sessions/",
+      "app"
+    ],
+    "watch": [
+      "./",
+      "public/",
+      "views/"
+    ]
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "emailjs": "^3.4.0",
+    "extend": "^3.0.2",
+    "formidable": "^1.2.2",
+    "html-pdf": "^3.0.1",
+    "mime-types": "^2.1.30",
+    "nodemailer": "^6.9.2",
+    "sqlite3": "^5.0.2"
+  }
+}
