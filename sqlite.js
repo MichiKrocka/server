@@ -1,3 +1,4 @@
+require("dotenv").config();
 // -------------------------------------------------------------------
 var http       = require('http'),
     util       = require('util'),
@@ -10,7 +11,6 @@ var http       = require('http'),
     exec       = require('child_process').exec,
     extend     = require('extend');
 // -------------------------------------------------------------------
-const nodemailer = require("nodemailer");
 const createTransporter = async () => {
   let transporter = nodemailer.createTransport({
     host: process.env.SMTP,
@@ -28,7 +28,11 @@ const createTransporter = async () => {
 // ---------------------------------------------------------
 const sendEmail = async (emailOptions) => {
   let emailTransporter = await createTransporter();
-  await emailTransporter.sendMail(emailOptions);
+  try {
+    await emailTransporter.sendMail(emailOptions);
+  } catch(err) {
+    console.log(err);
+  }
 };
 // -------------------------------------------------------------------
 var LOG            = false,
