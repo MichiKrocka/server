@@ -13,3 +13,8 @@ PSWD=tZdm57AkXsTxk4S
 if [ $PUBL_IP != $GOIP_IP ]; then
   curl "https://www.goip.de/setip?username=${USER}&password=${PSWD}"
 fi
+
+if [ "$1" == "restart" ]; then
+  curl "https://www.goip.de/setip?username=${USER}&password=${PSWD}"
+fi
+
