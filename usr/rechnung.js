@@ -29,7 +29,7 @@ const sendEmail = async (emailOptions) => {
 };
 // ---------------------------------------------------------
 var REGEXP = "/usr/lib/sqlite3/pcre.so",
-    BASE   = "/home/krocka/data/michi_sql/michi.sqlite";
+    BASE   = "/home/krocka/server/www/krocka.goip.de/data/michi_sql/michi.sqlite";
 // ---------------------------------------------------------
 var d = new Date();
 
@@ -138,6 +138,7 @@ oSQL.all(SQLquery, {}, function(err, raw){
               subject: "Rechnung",
               text:    r.name,
               to:      r.email,
+//              to:      "michael.krocka@gmail.com",
               cc:      "michael.krocka@gmail.com",
               from:    process.env.SMTP_EMAIL,
               attachments: [{

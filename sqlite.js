@@ -40,8 +40,8 @@ var LOG            = false,
     DIR_MOD        = "mod",
     SQL_ERROR_TIME = 300,
     REGEXP         = "/usr/lib/sqlite3/pcre.so",
-    INDEX          = "/home/krocka/server/index/",
-    INDEX_DB       = "/home/krocka/server/",
+    INDEX          = "/home/krocka/server/www/krocka.goip.de/index/",
+    INDEX_DB       = "/home/krocka/server/www/krocka.goip.de/data/",
     HTTP_DEFAULT_PAGE = ["index.htm", "index.html"],
     REJECT = [
       /^\/$/,
@@ -417,7 +417,7 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
   P.cmd = JSON.parse(P.cmd);
 //console.log("sql", P);
   // ...................................................................
-  var oSQL = new sqlite3.Database(P.base);
+  var oSQL = new sqlite3.Database(INDEX_DB+P.base);
 
   oSQL.run("PRAGMA busy_timeout = 4000");
 
