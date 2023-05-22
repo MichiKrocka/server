@@ -415,7 +415,7 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
   if(typeof P.cmd == "undefined")
     return ON_Error({message: "'cmd' not defined"});
   P.cmd = JSON.parse(P.cmd);
-//console.log("sql", P);
+//console.log("sql", P, INDEX_DB);
   // ...................................................................
   var oSQL = new sqlite3.Database(INDEX_DB+P.base);
 
@@ -654,38 +654,13 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
         content: oPar.oFields.attachmnet,
       }],
     });
+    oRes.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    });
     oRes.end(JSON.stringify({state:"OK"}));
-/*    
-  //console.log("eml", oPar);
-  oRes.writeHead(200, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-cache, no-store, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0"
-  });
-
-  var oSend = {
-    text:    oPar.oFields.text,
-    from:    "Michael Krocka<michael.krocka@gmail.com>",
-    to:      oPar.oFields.to,
-    cc:      oPar.oFields.cc,
-    subject: oPar.oFields.subject
-  };
-  if(typeof oPar.oFields.attachmnet != "undefined" &&
-     oPar.oFields.attachmnet != ""
-  ){
-    oSend["attachment"] = [{
-      data: oPar.oFields.attachmnet,
-      alternative:true
-    }];
-  }
-  server.send(oSend, function(err, message) {
-    if(err == null)
-      oRes.end(JSON.stringify({state:"OK"}));
-    else
-      oRes.end(JSON.stringify({state:err.message}));
-  });
-*/
 }
 // -------------------------------------------------------------------
 function stringComparison(a, b) {
