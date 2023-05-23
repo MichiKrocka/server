@@ -3,3 +3,4 @@
 index/
 data/
 package-lock.json
+.env
