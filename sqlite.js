@@ -73,6 +73,7 @@ server = http.createServer(function(oReq, oRes) {
       sBody = "";
   //..................................................................
   function httpSwitch() {
+//console.log(oReq.url);
     var R = "";
     switch(oReq.url.substr(0, 4)) {
       case '/mkd':  // mkdir
