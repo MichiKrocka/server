@@ -1,8 +1,8 @@
 .env
 *.sqlite
 **/node_modules
-index/
-data/
+**/index
+**/data
 package-lock.json
 .*
 !/.gitignore

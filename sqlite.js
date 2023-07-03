@@ -153,10 +153,11 @@ function httpGetDefault(oReq, oRes) {
   var fd = 0,
       sw = true;
       IX = INDEX;
-      
+
   oReq.url = decodeURIComponent(oReq.url);
   if(oReq.url.substr(0, 9) == "/database"){
     IX = INDEX_DB;
+    oReq.url = oReq.url.substr(9);
   }
 
   try {
