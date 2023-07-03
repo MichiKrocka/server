@@ -40,8 +40,8 @@ var LOG            = false,
     DIR_MOD        = "mod",
     SQL_ERROR_TIME = 300,
     REGEXP         = "/usr/lib/sqlite3/pcre.so",
-    INDEX          = "/home/krocka/server/www/krocka.goip.de/index/",
-    INDEX_DB       = "/home/krocka/server/www/krocka.goip.de/data/",
+    INDEX          = process.env.INDEX,
+    INDEX_DB       = process.env.INDEX_DB,
     HTTP_DEFAULT_PAGE = ["index.htm", "index.html"],
     REJECT = [
       /^\/$/,
@@ -179,24 +179,27 @@ function httpGetDefault(oReq, oRes) {
       oRes.end();
       return;
     }
-    for(var x in HTTP_DEFAULT_PAGE){
+    for (let x of HTTP_DEFAULT_PAGE) {
       try {
         fd = 0;
-        fd = fs.openSync(INDEX + oReq.url + HTTP_DEFAULT_PAGE[x], "r");
-        oReq.url += HTTP_DEFAULT_PAGE[x];
+        fd = fs.openSync(INDEX + oReq.url + x, "r");
+        oReq.url += x;
         break;
       } catch(e){
+        continue;
       }
       if(fd)
         fs.closeSync(fd);
-      oRes.writeHead(404, {
-        "Content-Type": "text/html",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-      });
-      oRes.end(util.format(HTML, oReq.url + " not found.."));
-      return;
+      else {
+        oRes.writeHead(404, {
+          "Content-Type": "text/html",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        });
+        oRes.end(util.format(HTML, oReq.url + " not found.."));
+        return;
+      }
     }
   }
 
@@ -229,7 +232,6 @@ function httpGetDefault(oReq, oRes) {
 
         for(var i in REJECT){
           if(oReq.url.match(REJECT[i])){
-  //          console.log(i, REJECT[i], oReq.url);
             oRes.writeHead(404, {
               "Content-Type": "text/html",
               "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -240,7 +242,6 @@ function httpGetDefault(oReq, oRes) {
             return;
           }
         }
-  //      console.log(oReq.url,"\n");
 
         oRes.writeHead(200, {
           "Content-Type": "text/html",
@@ -310,18 +311,17 @@ function Ren(sFile, oPar, oRes, sBody){
     "Content-Type": "octet/stream"
   });
   fs.rename(oPar.oFields.oldFile, oPar.oFields.newFile, function(){
-//console.log(oPar.oFields);
     oRes.end(JSON.stringify(oPar.oFields));
   });
 }
 // -------------------------------------------------------------------
 function Sto(sFile, oPar, oRes, sBody) {
-  var S = fs.createWriteStream(INDEX + sFile);
+  var S = fs.createWriteStream(INDEX_DB + sFile);
 
   if(Object.keys(oPar.oFields).length &&
      typeof oPar.oFields.encode != "undefined"
   ){
-    var buf = new Buffer(oPar.oFields.data, oPar.oFields.encode)
+    var buf = Buffer.from(oPar.oFields.data, oPar.oFields.encode)
     S.write(buf);
   } else
     S.write(sBody);
@@ -415,7 +415,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
   if(typeof P.cmd == "undefined")
     return ON_Error({message: "'cmd' not defined"});
   P.cmd = JSON.parse(P.cmd);
-//console.log("sql", P, INDEX_DB);
   // ...................................................................
   var oSQL = new sqlite3.Database(INDEX_DB+P.base);
 
@@ -441,7 +440,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
         oSQL.all(SQL, function(err, raw){
           if(err)
             return ON_Error(err);
-//console.log("F0", raw);
           if(raw[0].Filter == 0){
             R[cmd.sgn] = {
               rowIx:  0,
@@ -472,7 +470,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
         oSQL.all(SQL, function(err, raw){
           if(err)
             return ON_Error(err);
-//console.log("F1", raw);
           if(raw[0].Test == 0){
             R[cmd.sgn].rowIx = 0;
             F4();
@@ -550,7 +547,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
         oSQL.all(SQL, function(err, raw){
           if(err)
             return ON_Error(err);
-//console.log("F3", raw);
           if(raw.length && raw[0].N >= 0){
             R[cmd.sgn].rowIx = raw[0].N;
             R[cmd.sgn].recId = cmd.recId;
@@ -571,7 +567,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
         oSQL.all(SQL, function(err, raw){
           if(err)
             return ON_Error(err);
-//console.log("F4", raw);
           R[cmd.sgn].recId = raw[0].RecId;
           exec(iA + 1);
         });
@@ -593,7 +588,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
           val_org = {};
         extend(true, val_org, P.cmd[iA].val);
         val_org = JSON.stringify(val_org);
-//console.log("\nval", JSON.stringify(P.cmd[iA].val), "\norg", val_org);
         SQL =
           "UPDATE "+P.cmd[iA].table+
           " SET "+P.cmd[iA].col+"=?"+
