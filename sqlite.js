@@ -31,7 +31,7 @@ const sendEmail = async (emailOptions) => {
   try {
     await emailTransporter.sendMail(emailOptions);
   } catch(err) {
-    console.log(err);
+    console.log("No mail possible!", err);
   }
 };
 // -------------------------------------------------------------------
@@ -47,6 +47,8 @@ var LOG            = false,
       /^\/$/,
       /^\/database\/.*$/,
     ];
+// -------------------------------------------------------------------
+let MEM = {};
 // -------------------------------------------------------------------
 process.chdir(INDEX_DB);
 var pwd = process.cwd(),
@@ -93,6 +95,9 @@ server = http.createServer(function(oReq, oRes) {
         return;
       case '/sto':
         Sto(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
+        return;
+      case '/mem':
+        Mem(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
         return;
       case '/upl':
         Upl(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, oReq);
@@ -206,6 +211,9 @@ function httpGetDefault(oReq, oRes) {
   }
 
   if (!fs.existsSync(IX + oReq.url)) {
+    if (oRes.writableEnded)
+      return;
+
     oRes.writeHead(404, {
       "Content-Type": "text/html",
       "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -317,7 +325,16 @@ function Ren(sFile, oPar, oRes, sBody){
   });
 }
 // -------------------------------------------------------------------
+function Mem(sFile, oPar, oRes, sBody) {
+  MEM = {...MEM, ...oPar.oFields};
+  oRes.writeHead(200, {
+    "Content-Type": "octet/stream"
+  });
+  oRes.end(JSON.stringify(MEM));
+}
+// -------------------------------------------------------------------
 function Sto(sFile, oPar, oRes, sBody) {
+//  var S = fs.createWriteStream(INDEX + sFile);
   var S = fs.createWriteStream(INDEX_DB + sFile);
 
   if(Object.keys(oPar.oFields).length &&
@@ -640,23 +657,23 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
 }
 // -------------------------------------------------------------------
 function Eml(oUrl, oPar, oRes, oReq, sBody){
-    sendEmail({
-      subject: oPar.oFields.subject,
-      text:    oPar.oFields.text,
-      to:      oPar.oFields.to,
-      cc:      oPar.oFields.cc,
-      from:    process.env.SMTP_EMAIL,
-      attachments: oPar.oFields.attachmnet == undefined ? [] : [{
-        content: oPar.oFields.attachmnet,
-      }],
-    });
-    oRes.writeHead(200, {
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      "Pragma": "no-cache",
-      "Expires": "0"
-    });
-    oRes.end(JSON.stringify({state:"OK"}));
+  sendEmail({
+    subject: oPar.oFields.subject,
+    text:    oPar.oFields.text,
+    to:      oPar.oFields.to,
+    cc:      oPar.oFields.cc,
+    from:    process.env.SMTP_EMAIL,
+    attachments: oPar.oFields.attachmnet == undefined ? [] : [{
+      content: oPar.oFields.attachmnet,
+    }],
+  });
+  oRes.writeHead(200, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0"
+  });
+  oRes.end(JSON.stringify({state:"OK"}));
 }
 // -------------------------------------------------------------------
 function stringComparison(a, b) {
