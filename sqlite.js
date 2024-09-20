@@ -370,9 +370,6 @@ function Dir(oReq, oPar, oRes){
   oRes.writeHead(200, {
     "Content-Type": "octet/stream"
   });
-  oRes.writeHead(200, {
-    "Content-Type": "octet/stream"
-  });
   fs.readdir(INDEX + oPar.oFields.path, function(err, items) {
     if(err){
       console.log("ERR DIR", err);
@@ -660,6 +657,7 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
   sendEmail({
     subject: oPar.oFields.subject,
     text:    oPar.oFields.text,
+    html:    oPar.oFields.html,
     to:      oPar.oFields.to,
     cc:      oPar.oFields.cc,
     from:    process.env.SMTP_EMAIL,
