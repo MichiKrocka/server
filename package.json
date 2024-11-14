@@ -24,6 +24,7 @@
     ]
   },
   "dependencies": {
+    "aedes": "^0.51.3",
     "dotenv": "^16.0.3",
     "emailjs": "^3.4.0",
     "extend": "^3.0.2",
@@ -31,6 +32,7 @@
     "html-pdf": "^3.0.1",
     "mime-types": "^2.1.30",
     "nodemailer": "^6.9.2",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "websocket-stream": "^5.5.2"
   }
 }

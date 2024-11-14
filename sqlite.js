@@ -8,6 +8,8 @@ var http       = require('http'),
     mime       = require('mime-types'),
     nodemailer = require("nodemailer"),
     sqlite3    = require('sqlite3'),
+    ws         = require('websocket-stream'),
+    aedes      = require('aedes')(),
     exec       = require('child_process').exec,
     extend     = require('extend');
 // -------------------------------------------------------------------
@@ -47,6 +49,52 @@ var LOG            = false,
       /^\/$/,
       /^\/database\/.*$/,
     ];
+const mqtt = [{
+  "on": true,
+  "type": "http",
+  "port": 1884,
+  "ws": true
+},{
+  "on": true,
+  "type": "https",
+  "port": 8884,
+  "ws": true,
+  "secure": {
+    "key":  "encryption/privkey3.pem",
+    "cert": "encryption/fullchain3.pem",
+    "ca": "encryption/fullchain3.pem"
+  }
+}];
+// -------------------------------------------------------------------
+mqtt.forEach(s => {
+  if (!s.on)
+    return;
+  let opt = {},
+      S;
+
+  if (s.secure != undefined)
+    for (let x in s.secure)
+      opt[x] = fs.readFileSync(s.secure[x]);
+
+  if (s.ws) {
+    S = require(s.type).createServer(opt);
+    ws.createServer({
+      server: S
+    }, aedes.handle)
+    .on("error", (err) => {
+      console.log("MQTT", err.toString());
+    });
+  } else {
+    S = require(s.type).createServer(opt, aedes.handle)
+    .on("error", (err) => {
+      console.log("MQTT", err.toString());
+    });
+  }
+  
+  S.listen(s.port, "0.0.0.0", function() {
+    console.log(`${(new Date())} MQTT-Server is listening on port ${s.port}/${s.type}`);
+  });
+});
 // -------------------------------------------------------------------
 let MEM = {};
 // -------------------------------------------------------------------
@@ -282,7 +330,7 @@ function httpGetDefault(oReq, oRes) {
 }
 // -------------------------------------------------------------------
 server.listen(PORT, function() {
-  console.log((new Date()) + ' Server is listening on port ' + PORT);
+  console.log(`${(new Date())} HTTP-Server is listening on port ${PORT}/http`);
 });
 // -------------------------------------------------------------------
 function Mkd(sDir, oPar, oRes, sBody){
