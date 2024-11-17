@@ -460,8 +460,9 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
   LOG && console.log("sql", oPar);
   // ...................................................................
   function ON_Error(err){
-    console.log("SQL", err.message);
-    oRes.writeHead(200, {
+//    console.log("SQL", err.message, oPar.oFields, oPar.oFields.cmd);
+    console.log("SQL", err.message, JSON.stringify(oPar, null, 2));
+    oRes.writeHead(400, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "Pragma": "no-cache",
@@ -493,6 +494,11 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
     if(iA >= P.cmd.length)
       return end();
     var para = P.cmd[iA].para;
+
+/*
+if (P.cmd[iA].sgn == "UPDATE")
+ console.log(iA, P.cmd[iA], sBody);
+*/
     // .................................................................
     if(P.cmd[iA].sgn == "ID2IX"){
       var cmd = P.cmd[iA];
@@ -651,6 +657,7 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
         if(val_org == null)
           val_org = {};
         extend(true, val_org, P.cmd[iA].val);
+
         val_org = JSON.stringify(val_org);
         SQL =
           "UPDATE "+P.cmd[iA].table+
@@ -669,8 +676,9 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
     // .................................................................
     } else if(P.cmd[iA].query.match(/^INSERT|^DELETE|^UPDATE/i)){
       oSQL.run(P.cmd[iA].query, para, function(err, raw){
-        if(err)
+        if(err) {
           return ON_Error(err);
+        }
         R[P.cmd[iA].sgn ? P.cmd[iA].sgn : iA] = {
           lastID: this.lastID,
           changes: this.changes
