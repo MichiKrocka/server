@@ -8,8 +8,6 @@ var http       = require('http'),
     mime       = require('mime-types'),
     nodemailer = require("nodemailer"),
     sqlite3    = require('sqlite3'),
-    ws         = require('websocket-stream'),
-    aedes      = require('aedes')(),
     exec       = require('child_process').exec,
     extend     = require('extend');
 // -------------------------------------------------------------------
@@ -33,7 +31,7 @@ const sendEmail = async (emailOptions) => {
   try {
     await emailTransporter.sendMail(emailOptions);
   } catch(err) {
-    console.log("No mail possible!", err);
+    console.log(err);
   }
 };
 // -------------------------------------------------------------------
@@ -49,56 +47,6 @@ var LOG            = false,
       /^\/$/,
       /^\/database\/.*$/,
     ];
-const mqtt = [{
-  "on": true,
-  "type": "http",
-  "port": 1884,
-  "ws": true
-},{
-  "on": true,
-  "type": "https",
-  "port": 8884,
-  "ws": true,
-  "secure": {
-    "key":  "encryption/privkey3.pem",
-    "cert": "encryption/fullchain3.pem",
-    "ca": "encryption/fullchain3.pem"
-  }
-}];
-// -------------------------------------------------------------------
-mqtt.forEach(s => {
-  if (!s.on)
-    return;
-  let opt = {},
-      S;
-
-  if (s.secure != undefined)
-    for (let x in s.secure)
-      opt[x] = fs.readFileSync(s.secure[x]);
-
-  if (s.ws) {
-    S = require(s.type).createServer(opt);
-    ws.createServer({
-      server: S
-    }, aedes.handle)
-    .on("error", (err) => {
-      console.log("MQTT", err.toString());
-    });
-  } else {
-    S = require(s.type).createServer(opt, aedes.handle)
-    .on("error", (err) => {
-      console.log("MQTT", err.toString());
-    });
-  }
-  
-  S.listen(s.port, "0.0.0.0", function() {
-    console.log(`${(new Date())} MQTT-Server is listening on port ${s.port}/${s.type}`);
-  });
-});
-// -------------------------------------------------------------------
-let MEM = {};
-// -------------------------------------------------------------------
-let MEM = {};
 // -------------------------------------------------------------------
 process.chdir(INDEX_DB);
 var pwd = process.cwd(),
@@ -145,9 +93,6 @@ server = http.createServer(function(oReq, oRes) {
         return;
       case '/sto':
         Sto(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
-        return;
-      case '/mem':
-        Mem(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
         return;
       case '/upl':
         Upl(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, oReq);
@@ -261,9 +206,6 @@ function httpGetDefault(oReq, oRes) {
   }
 
   if (!fs.existsSync(IX + oReq.url)) {
-    if (oRes.writableEnded)
-      return;
-
     oRes.writeHead(404, {
       "Content-Type": "text/html",
       "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -332,7 +274,7 @@ function httpGetDefault(oReq, oRes) {
 }
 // -------------------------------------------------------------------
 server.listen(PORT, function() {
-  console.log(`${(new Date())} HTTP-Server is listening on port ${PORT}/http`);
+  console.log((new Date()) + ' Server is listening on port ' + PORT);
 });
 // -------------------------------------------------------------------
 function Mkd(sDir, oPar, oRes, sBody){
@@ -375,16 +317,7 @@ function Ren(sFile, oPar, oRes, sBody){
   });
 }
 // -------------------------------------------------------------------
-function Mem(sFile, oPar, oRes, sBody) {
-  MEM = {...MEM, ...oPar.oFields};
-  oRes.writeHead(200, {
-    "Content-Type": "octet/stream"
-  });
-  oRes.end(JSON.stringify(MEM));
-}
-// -------------------------------------------------------------------
 function Sto(sFile, oPar, oRes, sBody) {
-//  var S = fs.createWriteStream(INDEX + sFile);
   var S = fs.createWriteStream(INDEX_DB + sFile);
 
   if(Object.keys(oPar.oFields).length &&
@@ -417,6 +350,9 @@ function Upl(sFile, oPar, oRes, oReq){
 }
 // ---------------------------------------------------------------------
 function Dir(oReq, oPar, oRes){
+  oRes.writeHead(200, {
+    "Content-Type": "octet/stream"
+  });
   oRes.writeHead(200, {
     "Content-Type": "octet/stream"
   });
@@ -462,9 +398,8 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
   LOG && console.log("sql", oPar);
   // ...................................................................
   function ON_Error(err){
-//    console.log("SQL", err.message, oPar.oFields, oPar.oFields.cmd);
-    console.log("SQL", err.message, JSON.stringify(oPar, null, 2));
-    oRes.writeHead(400, {
+    console.log("SQL", err.message);
+    oRes.writeHead(200, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "Pragma": "no-cache",
@@ -496,11 +431,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
     if(iA >= P.cmd.length)
       return end();
     var para = P.cmd[iA].para;
-
-/*
-if (P.cmd[iA].sgn == "UPDATE")
- console.log(iA, P.cmd[iA], sBody);
-*/
     // .................................................................
     if(P.cmd[iA].sgn == "ID2IX"){
       var cmd = P.cmd[iA];
@@ -659,7 +589,6 @@ if (P.cmd[iA].sgn == "UPDATE")
         if(val_org == null)
           val_org = {};
         extend(true, val_org, P.cmd[iA].val);
-
         val_org = JSON.stringify(val_org);
         SQL =
           "UPDATE "+P.cmd[iA].table+
@@ -678,9 +607,8 @@ if (P.cmd[iA].sgn == "UPDATE")
     // .................................................................
     } else if(P.cmd[iA].query.match(/^INSERT|^DELETE|^UPDATE/i)){
       oSQL.run(P.cmd[iA].query, para, function(err, raw){
-        if(err) {
+        if(err)
           return ON_Error(err);
-        }
         R[P.cmd[iA].sgn ? P.cmd[iA].sgn : iA] = {
           lastID: this.lastID,
           changes: this.changes
@@ -712,24 +640,23 @@ if (P.cmd[iA].sgn == "UPDATE")
 }
 // -------------------------------------------------------------------
 function Eml(oUrl, oPar, oRes, oReq, sBody){
-  sendEmail({
-    subject: oPar.oFields.subject,
-    text:    oPar.oFields.text,
-    html:    oPar.oFields.html,
-    to:      oPar.oFields.to,
-    cc:      oPar.oFields.cc,
-    from:    process.env.SMTP_EMAIL,
-    attachments: oPar.oFields.attachmnet == undefined ? [] : [{
-      content: oPar.oFields.attachmnet,
-    }],
-  });
-  oRes.writeHead(200, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-cache, no-store, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0"
-  });
-  oRes.end(JSON.stringify({state:"OK"}));
+    sendEmail({
+      subject: oPar.oFields.subject,
+      text:    oPar.oFields.text,
+      to:      oPar.oFields.to,
+      cc:      oPar.oFields.cc,
+      from:    process.env.SMTP_EMAIL,
+      attachments: oPar.oFields.attachmnet == undefined ? [] : [{
+        content: oPar.oFields.attachmnet,
+      }],
+    });
+    oRes.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    });
+    oRes.end(JSON.stringify({state:"OK"}));
 }
 // -------------------------------------------------------------------
 function stringComparison(a, b) {
