@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "aedes": "^0.51.3",
+    "crypto": "^1.0.1",
     "dotenv": "^16.0.3",
     "emailjs": "^3.4.0",
     "extend": "^3.0.2",
