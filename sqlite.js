@@ -717,8 +717,9 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
     to:      oPar.oFields.to,
     cc:      oPar.oFields.cc,
     from:    process.env.SMTP_EMAIL,
-    attachments: oPar.oFields.attachmnet == undefined ? [] : [{
-      content: oPar.oFields.attachmnet,
+    attachments: [{
+      filename: oPar.oFiles.file.name,
+      path:     oPar.oFiles.file.path,
     }],
   });
   oRes.writeHead(200, {

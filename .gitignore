@@ -3,6 +3,7 @@
 **/node_modules
 **/index
 **/data
+index/
 package-lock.json
 .*
 !/.gitignore
