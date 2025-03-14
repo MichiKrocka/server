@@ -710,6 +710,14 @@ if (P.cmd[iA].sgn == "UPDATE")
 }
 // -------------------------------------------------------------------
 function Eml(oUrl, oPar, oRes, oReq, sBody){
+  let attach = [];
+
+  if (oPar.oFiles.file !== undefined) {
+    attach = [{
+      filename: oPar.oFiles.file.name,
+      path:     oPar.oFiles.file.path,
+    }];
+  }
   sendEmail({
     subject: oPar.oFields.subject,
     text:    oPar.oFields.text,
@@ -717,10 +725,7 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
     to:      oPar.oFields.to,
     cc:      oPar.oFields.cc,
     from:    process.env.SMTP_EMAIL,
-    attachments: [{
-      filename: oPar.oFiles.file.name,
-      path:     oPar.oFiles.file.path,
-    }],
+    attachments: attach,
   });
   oRes.writeHead(200, {
     "Content-Type": "application/json; charset=utf-8",
