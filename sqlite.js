@@ -494,11 +494,6 @@ function Sql(oUrl, oPar, oRes, oReq, sBody){
     if(iA >= P.cmd.length)
       return end();
     var para = P.cmd[iA].para;
-
-/*
-if (P.cmd[iA].sgn == "UPDATE")
- console.log(iA, P.cmd[iA], sBody);
-*/
     // .................................................................
     if(P.cmd[iA].sgn == "ID2IX"){
       var cmd = P.cmd[iA];
