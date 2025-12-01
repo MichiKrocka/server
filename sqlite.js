@@ -113,7 +113,7 @@ var HTML =
     '</body>'+
   '</html>';
 // -------------------------------------------------------------------
-server = http.createServer(function(oReq, oRes) {
+server = http.createServer(async function(oReq, oRes) {
   var oPar = {
         oFields: {},
         oFiles: {}
@@ -171,12 +171,13 @@ server = http.createServer(function(oReq, oRes) {
   urlTyp = oReq.headers["content-type"];
   switch(oReq.method) {
     case 'POST':
-       oReq.on('data', function(data) {
-            sBody += data;
-        }).on('end', function () {
-        });
-      var frm = formidable.IncomingForm();
+      var frm = new formidable.IncomingForm();
+
       frm.parse(oReq, function(err, fields, files) {
+        if (err) {
+          next(err);
+          return;
+        }
         oPar = {
           oFields: fields,
           oFiles: files
@@ -187,6 +188,7 @@ server = http.createServer(function(oReq, oRes) {
         });
         httpSwitch();
       });
+
       break;
     case 'GET':
       oPar = {
