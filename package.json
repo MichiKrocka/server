@@ -30,7 +30,7 @@
     "emailjs": "^4.0.3",
     "extend": "^3.0.2",
     "formidable": "^3.5.4",
-    "html-pdf": "^1.5.0",
+    "html-pdf": "^3.0.1",
     "mime-types": "^3.0.2",
     "nodemailer": "^7.0.11",
     "sqlite3": "^5.1.7",
