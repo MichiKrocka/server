@@ -12,6 +12,7 @@ var http       = require('http'),
     aedes      = require('aedes')(),
     exec       = require('child_process').exec,
     extend     = require('extend');
+const { Buffer } = require('node:buffer');
 // -------------------------------------------------------------------
 const createTransporter = async () => {
   let transporter = nodemailer.createTransport({
@@ -30,6 +31,7 @@ const createTransporter = async () => {
 // ---------------------------------------------------------
 const sendEmail = async (emailOptions) => {
   let emailTransporter = await createTransporter();
+
   try {
     await emailTransporter.sendMail(emailOptions);
   } catch(err) {
@@ -142,7 +144,7 @@ server = http.createServer(async function(oReq, oRes) {
         Ren(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
         return;
       case '/sto':
-        Sto(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
+        Sto(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody, oReq);
         return;
       case '/mem':
         Mem(decodeURIComponent(oReq.url.substr(5)), oPar, oRes, sBody);
@@ -175,7 +177,8 @@ server = http.createServer(async function(oReq, oRes) {
 
       frm.parse(oReq, function(err, fields, files) {
         if (err) {
-          next(err);
+          console.log(err);
+          //next(err);
           return;
         }
         oPar = {
@@ -370,7 +373,7 @@ function Ren(sFile, oPar, oRes, sBody){
   oRes.writeHead(200, {
     "Content-Type": "octet/stream"
   });
-  fs.rename(oPar.oFields.oldFile, oPar.oFields.newFile, function(){
+  fs.rename(oPar.oFields.oldFile[0], oPar.oFields.newFile[0], function(){
     oRes.end(JSON.stringify(oPar.oFields));
   });
 }
@@ -383,14 +386,14 @@ function Mem(sFile, oPar, oRes, sBody) {
   oRes.end(JSON.stringify(MEM));
 }
 // -------------------------------------------------------------------
-function Sto(sFile, oPar, oRes, sBody) {
-//  var S = fs.createWriteStream(INDEX + sFile);
+function Sto(sFile, oPar, oRes, sBody, oReq) {
   var S = fs.createWriteStream(INDEX_DB + sFile);
 
   if(Object.keys(oPar.oFields).length &&
      typeof oPar.oFields.encode != "undefined"
   ){
-    var buf = Buffer.from(oPar.oFields.data, oPar.oFields.encode)
+    var buf = Buffer.from(oPar.oFields.data[0], "base64");
+
     S.write(buf);
   } else
     S.write(sBody);
@@ -398,7 +401,7 @@ function Sto(sFile, oPar, oRes, sBody) {
   oRes.writeHead(200, {
     "Content-Type": "octet/stream"
   });
-  oRes.end(JSON.stringify({"msg":"OK"}));
+  oRes.end(JSON.stringify({"msg":"OK"}));  
 }
 // -------------------------------------------------------------------
 function Upl(sFile, oPar, oRes, oReq){
@@ -711,16 +714,16 @@ function Eml(oUrl, oPar, oRes, oReq, sBody){
 
   if (oPar.oFiles.file !== undefined) {
     attach = [{
-      filename: oPar.oFiles.file.name,
-      path:     oPar.oFiles.file.path,
+      filename: oPar.oFiles.file[0].originalFilename,
+      path:     oPar.oFiles.file[0].filepath,
     }];
   }
   sendEmail({
-    subject: oPar.oFields.subject,
-    text:    oPar.oFields.text,
-    html:    oPar.oFields.html,
-    to:      oPar.oFields.to,
-    cc:      oPar.oFields.cc,
+    subject: oPar.oFields.subject[0],
+    text:    oPar.oFields.text[0],
+//    html:    oPar.oFields.html,
+    to:      oPar.oFields.to[0],
+    cc:      oPar.oFields.cc[0],
     from:    process.env.SMTP_EMAIL,
     attachments: attach,
   });
