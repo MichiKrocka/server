@@ -125,7 +125,7 @@ server = http.createServer(async function(oReq, oRes) {
       sBody = "";
   //..................................................................
   function httpSwitch() {
-//console.log(oReq.url);
+//console.log(oReq.url, oReq.url.substr(0, 4));
     var R = "";
     switch(oReq.url.substr(0, 4)) {
       case '/mkd':  // mkdir
@@ -163,6 +163,9 @@ server = http.createServer(async function(oReq, oRes) {
         break;
       case '/run':
         Run(oUrl, oPar, oRes, oReq);
+        return;
+      case '/mp3':
+        mp3(oUrl, oPar, oRes, oReq);
         return;
     }
     httpGetDefault(oReq, oRes);
@@ -461,12 +464,51 @@ function Run(oUrl, oPar, oRes){
   });
 }
 // -------------------------------------------------------------------
+function mp3(oUrl, oPar, oRes, oReq){
+  // GET - download
+  if (oReq.method === "GET") {
+    let fileName = oUrl.path.split("/").slice(-1);
+    
+    try {
+      const data = fs.readFileSync(INDEX_DB + "meister_sql/music/" + decodeURI(fileName));
+      
+      oRes.writeHead(200, {
+        "Content-Type": "audio/mpeg"
+      });
+      oRes.end(data);
+    } catch (err) {
+      oRes.writeHead(200, {
+        "Content-Type": "octet/stream"
+      });
+      oRes.end("Error");
+    }
+    return;
+  }
+  // POST - upload
+  let mp3File = INDEX_DB + "meister_sql/music/" + oPar.oFiles.file[0].originalFilename;
+  try {
+    fs.unlinkSync(mp3File);
+  } catch (err) {
+    console.log(err);
+  }
+  fs.rename(
+    oPar.oFiles.file[0].filepath, mp3File, (err) => {
+      if (err)
+        console.log(err);
+      oRes.writeHead(200, {
+        "Content-Type": "octet/stream"
+      });
+      oRes.end("OK");      
+    }
+  );
+}
+// -------------------------------------------------------------------
 function Sql(oUrl, oPar, oRes, oReq, sBody){
   LOG && console.log("sql", oPar);
   // ...................................................................
   function ON_Error(err){
 //    console.log("SQL", err.message, oPar.oFields, oPar.oFields.cmd);
-    console.log("SQL", err.message, JSON.stringify(oPar, null, 2));
+//    console.log("SQL", err.message, JSON.stringify(oPar, null, 2));
     oRes.writeHead(400, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-cache, no-store, must-revalidate",
