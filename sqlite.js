@@ -466,41 +466,60 @@ function Run(oUrl, oPar, oRes){
 // -------------------------------------------------------------------
 function mp3(oUrl, oPar, oRes, oReq){
   // GET - download
-  if (oReq.method === "GET") {
-    let fileName = oUrl.path.split("/").slice(-1);
-    
-    try {
-      const data = fs.readFileSync(INDEX_DB + "meister_sql/music/" + decodeURI(fileName));
+  switch (oReq.method) {
+    case "GET": { // GET - downpload
+      let fileName = oUrl.path.split("/").slice(-1);
       
-      oRes.writeHead(200, {
-        "Content-Type": "audio/mpeg"
-      });
-      oRes.end(data);
-    } catch (err) {
-      oRes.writeHead(200, {
-        "Content-Type": "octet/stream"
-      });
-      oRes.end("Error");
+      try {
+        const data = fs.readFileSync(INDEX_DB + "meister_sql/music/" + decodeURI(fileName));
+        
+        oRes.writeHead(200, {
+          "Content-Type": "audio/mpeg"
+        });
+        oRes.end(data);
+      } catch (err) {
+        oRes.writeHead(200, {
+          "Content-Type": "octet/stream"
+        });
+        oRes.end("Error");
+      }
+      break;
     }
-    return;
-  }
-  // POST - upload
-  let mp3File = INDEX_DB + "meister_sql/music/" + oPar.oFiles.file[0].originalFilename;
-  try {
-    fs.unlinkSync(mp3File);
-  } catch (err) {
-    console.log(err);
-  }
-  fs.rename(
-    oPar.oFiles.file[0].filepath, mp3File, (err) => {
-      if (err)
-        console.log(err);
+    case "POST": {  // POST - upload
+      let mp3File = INDEX_DB + "meister_sql/music/" + oPar.oFiles.file[0].originalFilename;
+
+      try {
+        fs.unlinkSync(mp3File);
+      } catch (err) {
+      }
+      fs.rename(
+        oPar.oFiles.file[0].filepath, mp3File, (err) => {
+          if (err)
+            console.log(err);
+          oRes.writeHead(200, {
+            "Content-Type": "octet/stream"
+          });
+          oRes.end("OK");      
+        }
+      );
+      break;
+    }
+    case "DELETE": { // DELETE - remove
+      let fileName = oUrl.path.split("/").slice(-1);
+      
+      try {
+        let mp3File = INDEX_DB + "meister_sql/music/" + decodeURI(fileName);
+
+        fs.unlinkSync(mp3File);
+      } catch (err) {
+      }
       oRes.writeHead(200, {
         "Content-Type": "octet/stream"
       });
       oRes.end("OK");      
+      break;
     }
-  );
+  }
 }
 // -------------------------------------------------------------------
 function Sql(oUrl, oPar, oRes, oReq, sBody){
