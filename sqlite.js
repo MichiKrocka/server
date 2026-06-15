@@ -468,8 +468,8 @@ function mp3(oUrl, oPar, oRes, oReq){
   // GET - download
   switch (oReq.method) {
     case "GET": { // GET - downpload
-      let fileName = oUrl.path.split("/").slice(-1);
-      
+      let fileName = oUrl.path.split("/").slice(-1)[0].replace(/\?.*$/, "");
+
       try {
         const data = fs.readFileSync(INDEX_DB + "meister_sql/music/" + decodeURI(fileName));
         
